@@ -1,0 +1,83 @@
+<html>
+  <h1 style="color: white">סושי ביותר</h1> 
+  <h1 style="color: white">CIA מאגר</h1> <br> <br>
+  <style>
+      * {margin: 0; padding: 0}
+      body {background: #000;}
+      canvas { position: absolute; top:0; left:0; z-index: -1;}
+  </style>
+  <body>
+    <form action="/upload" enctype="multipart/form-data" method="post" style="background-color: white;">
+      <input id="file" type="file" name="file">
+      <input type="submit" value="Upload!">
+    <a id="error" style="color: red"></a>
+    </form> 
+    <br><br>
+    <img src="/monkey.png">
+
+
+    <canvas></canvas>
+
+  </body>
+
+  <script>
+    document.getElementsByTagName("form")[0].addEventListener("submit", function(e) {
+        e.preventDefault()
+        //this.submit();
+        fetch("/upload", {
+          method: "POST",
+          body: new FormData(this)
+        }).then(res => {
+          if (res.ok) {
+            document.getElementById("error").innerText = "";
+            window.open("/files/" + document.getElementById("file").files[0].name);
+          }
+        }).catch(a => {
+            document.getElementById("error").innerText = "FILE TOO LARGE!! ME NO LIKE! MAXIMUM 1024 BYTES"
+        });
+        return false;
+    }); 
+  </script>
+
+  <script>
+    // Initialising the canvas
+    var canvas = document.querySelector('canvas'),
+    ctx = canvas.getContext('2d');
+    
+    // Setting the width and height of the canvas
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    // Setting up the letters
+    var letters = 'NOAN';
+    letters = letters.split('');
+    
+    // Setting up the columns
+    var fontSize = 10,
+        columns = canvas.width / fontSize;
+    
+    // Setting up the drops
+    var drops = [];
+    for (var i = 0; i < columns; i++) {
+      drops[i] = 1;
+    }
+    
+    // Setting up the draw function
+    function draw() {
+      ctx.fillStyle = 'rgba(0, 0, 0, .1)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      for (var i = 0; i < drops.length; i++) {
+        var text = letters[Math.floor(Math.random() * letters.length)];
+        ctx.fillStyle = '#0f0';
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+        drops[i]++;
+        if (drops[i] * fontSize > canvas.height && Math.random() > .95) {
+          drops[i] = 0;
+        }
+      }
+    }
+    
+    // Loop the animation
+    setInterval(draw, 33);
+  </script>
+</html>

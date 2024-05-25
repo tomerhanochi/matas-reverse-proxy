@@ -1,13 +1,13 @@
 import cgi
 from dataclasses import dataclass
 from http.server import HTTPServer, BaseHTTPRequestHandler
-
-import requests
+from http.client import HTTPConnection
 
 
 @dataclass(slots=True)
 class CachedResponse:
     status_code: int
+    reason: str
     content_length: str
     content_type: str
     content: bytes
@@ -20,7 +20,7 @@ CACHE: dict[str, CachedResponse] = {}
 class MyHTTPRequestHandler(BaseHTTPRequestHandler):
     def backend(self) -> str:
         global INDEX
-        hosts = ["http://localhost:3000"]
+        hosts = ["localhost:3000"]
         host = hosts[INDEX]
         INDEX = (INDEX + 1) % len(hosts)
         return host
@@ -29,12 +29,15 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         global CACHE
         cached_response = CACHE.get(self.path)
         if cached_response is None:
-            response = requests.get(f"{self.backend()}{self.path}")
+            con = HTTPConnection(self.backend())
+            con.request("GET", self.path)
+            res = con.getresponse()
             cached_response = CachedResponse(
-                response.status_code,
-                response.headers.get("Content-Length"),
-                response.headers.get("Content-Type"),
-                response.content,
+                res.status,
+                res.reason,
+                res.getheader("content-length"),
+                res.getheader("content-type"),
+                res.read(),
             )
             CACHE[self.path] = cached_response
 
@@ -56,19 +59,22 @@ class MyHTTPRequestHandler(BaseHTTPRequestHandler):
         field_storage = form.list[0]
         while True:
             chunk = field_storage.file.read(1024)
-            response = requests.post(
-                url=f"{self.backend()}/upload-large/{field_storage.filename}",
-                files={"file": (field_storage.filename, chunk, field_storage.type)},
+            chunk_size = len(chunk)
+            con = HTTPConnection(self.backend())
+            con.request(
+                "POST",
+                f"upload-large/{field_storage.filename}",
+                headers={
+                    "content-length": chunk_size,
+                    "content-type": "application/octet-stream",
+                },
+                body=chunk
             )
-            # If the chunk was smaller than 1024, then it was the last chunk
-            # And if there was an error, we want to return it to the user
-            if len(chunk) < 1024 or response.status_code != 200:
+            res = con.getresponse()
+            if chunk_size < 1024 or res.status != 200:
                 break
-        self.send_response(response.status_code)
-        self.send_header("Content-Length", response.headers.get("Content-Length"))
-        self.send_header("Content-Type", response.headers.get("Content-Type"))
+        self.send_response(res.status, res.reason)
         self.end_headers()
-        self.wfile.write(response.content)
 
 
 # class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):

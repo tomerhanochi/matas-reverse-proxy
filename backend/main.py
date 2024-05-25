@@ -19,8 +19,8 @@ def noan():
     return flask.send_file("./monkey.png")
 
 
-@app.route("/upload", methods=["POST"])
-def up():
+@app.route("/upload/<filename>", methods=["POST"])
+def up(filename: str):
     if request.method == "POST":
         if request.content_length > 1024:
             return flask.Response(
@@ -28,18 +28,18 @@ def up():
             )
 
         f = request.files["file"]
-        f.save(f"./files/{secure_filename(f.filename)}")
+        f.save(f"./files/{secure_filename(filename)}")
         return flask.Response("k", 200)
 
 
-@app.route("/upload-large", methods=["POST"])
-def uplarge():
+@app.route("/upload-large/<filename>", methods=["POST"])
+def uplarge(filename: str):
     if request.method == "POST":
         if request.content_length > 100000000000:
             flask.Response("too big", 400)
 
         f = request.files["file"]
-        with open(f"./files/{secure_filename(f.filename)}", "ab") as file:
+        with open(f"./files/{secure_filename(filename)}", "ab") as file:
             file.write(f.stream.read())
 
         return flask.Response("k", 200)

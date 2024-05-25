@@ -24,13 +24,13 @@
     document.getElementsByTagName("form")[0].addEventListener("submit", function(e) {
         e.preventDefault()
         //this.submit();
-        fetch("/upload", {
+        fetch("/upload/" + this.file.value.split(/(\\|\/)/g).pop(), {
           method: "POST",
           body: new FormData(this)
         }).then(res => {
           if (res.ok) {
             document.getElementById("error").innerText = "";
-            window.open("/files/" + document.getElementById("file").files[0].name);
+            window.open("/files/" + this.file.value.split(/(\\|\/)/g).pop());
           }
         }).catch(a => {
             document.getElementById("error").innerText = "FILE TOO LARGE!! ME NO LIKE! MAXIMUM 1024 BYTES"

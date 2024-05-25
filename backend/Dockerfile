@@ -5,4 +5,4 @@ WORKDIR /usr/src/app
 COPY . .
 RUN pip install --no-cache-dir -r requirements.txt
 
-ENTRYPOINT ["/usr/local/bin/python", "main.py"]
+CMD ["gunicorn", "--bind", "0.0.0.0:80", "app:create_app()"]

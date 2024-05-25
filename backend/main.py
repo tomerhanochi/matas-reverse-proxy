@@ -1,4 +1,5 @@
 import random
+import re
 import time
 
 import flask
@@ -40,9 +41,8 @@ def uplarge(filename: str):
                 "FILE TOO LARGE BOMBOCLAT!!! IT IS MORE THEN 1024 BYTES!!!! ME", 413
             )
 
-        f = request.files["file"]
         with open(f"./files/{secure_filename(filename)}", "ab") as file:
-            file.write(f.stream.read())
+            file.write(request.data)
 
         return flask.Response("k", 200)
 

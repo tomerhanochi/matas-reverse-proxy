@@ -35,8 +35,10 @@ def up(filename: str):
 @app.route("/upload-large/<filename>", methods=["POST"])
 def uplarge(filename: str):
     if request.method == "POST":
-        if request.content_length > 100000000000:
-            flask.Response("too big", 400)
+        if request.content_length > 1024:
+            return flask.Response(
+                "FILE TOO LARGE BOMBOCLAT!!! IT IS MORE THEN 1024 BYTES!!!! ME", 413
+            )
 
         f = request.files["file"]
         with open(f"./files/{secure_filename(filename)}", "ab") as file:
@@ -54,5 +56,5 @@ def main():
     app.run("0.0.0.0", 3000)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
